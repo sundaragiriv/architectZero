@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import AppHeader from '../../../components/AppHeader.astro';
-import { getCollection, getEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
 import { DOMAINS } from '../../../lib/domains';
 
 export async function getStaticPaths() {
@@ -18,190 +17,656 @@ export async function getStaticPaths() {
 const { lesson } = Astro.props;
 const { Content } = await lesson.render();
 const domain = DOMAINS.find(d => d.id === lesson.data.domain)!;
+
+// Get all lessons in this domain for sidebar navigation
+const allLessons = await getCollection('lessons');
+const domainLessons = allLessons
+  .filter(l => l.data.domain === domain.id)
+  .sort((a, b) => a.data.order - b.data.order);
+
+// Group by task ref for sidebar
+const taskGroups: Record<string, typeof domainLessons> = {};
+const noTaskLessons: typeof domainLessons = [];
+for (const l of domainLessons) {
+  const ref = l.data.taskRef || '__none__';
+  if (ref === '__none__') noTaskLessons.push(l);
+  else {
+    if (!taskGroups[ref]) taskGroups[ref] = [];
+    taskGroups[ref].push(l);
+  }
+}
+
+const taskMap = Object.fromEntries(
+  (domain.taskStatements || []).map(t => [t.ref, t])
+);
+
+// Prev/next lesson
+const currentIdx = domainLessons.findIndex(l => l.data.id === lesson.data.id);
+const prevLesson = currentIdx > 0 ? domainLessons[currentIdx - 1] : null;
+const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[currentIdx + 1] : null;
 ---
 
 <BaseLayout title={`${lesson.data.title} — Architect Zero`}>
-  <AppHeader
-    slot="header"
-    title={lesson.data.title}
-    showBack={true}
-    backHref={`/learn/${domain.id}`}
-  />
 
-  <!-- STEP TABS -->
-  <div class="sticky top-[88px] z-40 bg-az-black px-4 pt-2 pb-2"
-    style={`border-bottom:1px solid ${domain.color}22`}>
-    <div class="flex gap-2">
+<div class="lesson-layout">
+
+  <!-- ── LEFT SIDEBAR: Domain tree nav ── -->
+  <aside class="lesson-sidebar" id="lesson-sidebar">
+    <div class="lesson-sidebar-inner">
+
+      <!-- Domain link -->
+      <div class="lesson-domain-header" style={`border-left:3px solid ${domain.color}`}>
+        <a href="/learn" class="lesson-back-top">← All Domains</a>
+        <a href={`/learn/${domain.id}`} class="lesson-domain-link">
+          <span class="lesson-domain-code" style={`color:${domain.color}`}>{domain.code}</span>
+          <span class="lesson-domain-name">{domain.title}</span>
+        </a>
+      </div>
+
+      <!-- Nav tree -->
+      <nav class="lesson-nav-tree">
+
+        {noTaskLessons.length > 0 && (
+          <div class="lesson-task-group">
+            <div class="lesson-task-label" style={`color:${domain.color}`}>Lessons</div>
+            {noTaskLessons.map(l => {
+              const slug = l.slug.split('/').pop();
+              const isActive = l.data.id === lesson.data.id;
+              return (
+                <a
+                  href={`/learn/${domain.id}/${slug}`}
+                  class={`lesson-nav-link ${isActive ? 'active' : ''}`}
+                  data-lesson-id={l.data.id}
+                >
+                  <span class="lesson-nav-dot" style={isActive ? `background:${domain.color}` : ''}></span>
+                  <span class="lesson-nav-title">{l.data.title}</span>
+                </a>
+              );
+            })}
+          </div>
+        )}
+
+        {Object.entries(taskGroups).sort().map(([ref, lessons]) => {
+          const taskInfo = taskMap[ref];
+          const hasActive = lessons.some(l => l.data.id === lesson.data.id);
+          return (
+            <div class={`lesson-task-group ${hasActive ? 'is-active-group' : ''}`}>
+              <div class="lesson-task-label" style={`color:${domain.color}`}>
+                <span class="lesson-task-ref">{ref}</span>
+                {taskInfo && <span class="lesson-task-name-small">{taskInfo.title}</span>}
+              </div>
+              {lessons.map(l => {
+                const slug = l.slug.split('/').pop();
+                const isActive = l.data.id === lesson.data.id;
+                return (
+                  <a
+                    href={`/learn/${domain.id}/${slug}`}
+                    class={`lesson-nav-link ${isActive ? 'active' : ''}`}
+                    data-lesson-id={l.data.id}
+                  >
+                    <span class="lesson-nav-dot"
+                      style={isActive ? `background:${domain.color}` : ''}></span>
+                    <span class="lesson-nav-title">{l.data.title}</span>
+                    {l.data.tag?.includes('⚡') && <span style="font-size:10px;flex-shrink:0">⚡</span>}
+                  </a>
+                );
+              })}
+            </div>
+          );
+        })}
+      </nav>
+
+    </div>
+  </aside>
+
+  <!-- ── LESSON CONTENT ── -->
+  <div class="lesson-content-wrap">
+
+    <!-- Lesson header breadcrumb -->
+    <div class="lesson-breadcrumb">
+      <a href="/learn" class="lesson-bc-link">Learn</a>
+      <span class="lesson-bc-sep">›</span>
+      <a href={`/learn/${domain.id}`} class="lesson-bc-link" style={`color:${domain.color}`}>
+        {domain.code}
+      </a>
+      {lesson.data.taskRef && (
+        <>
+          <span class="lesson-bc-sep">›</span>
+          <span class="lesson-bc-ref" style={`color:${domain.color}88`}>{lesson.data.taskRef}</span>
+        </>
+      )}
+    </div>
+
+    <!-- Lesson meta bar -->
+    <div class="lesson-meta-bar">
+      <div class="lesson-meta-tags">
+        <span class="lesson-tag" style={`background:${domain.color}20;color:${domain.color};border:1px solid ${domain.color}33`}>
+          {lesson.data.tag}
+        </span>
+        <span class="lesson-tag-muted">{lesson.data.duration}</span>
+        <span class="lesson-tag-muted">+{lesson.data.xp} XP</span>
+      </div>
+    </div>
+
+    <h1 class="lesson-title">{lesson.data.title}</h1>
+
+    <!-- Step tabs -->
+    <div class="lesson-step-tabs" style={`border-bottom:1px solid ${domain.color}22`}>
       {[
-        { key: 'analogy',   label: '💡 Analogy'  },
-        { key: 'concept',   label: '📖 Concept'  },
-        { key: 'technical', label: '⚙️ Technical' },
+        { key: 'analogy',   label: '💡 Analogy'   },
+        { key: 'concept',   label: '📖 Concept'   },
+        { key: 'technical', label: '⚙️ Technical'  },
       ].map(({ key, label }, i) => (
         <button
-          class="step-tab flex-1"
+          class="lesson-step-btn"
           id={`tab-${key}`}
           onclick={`switchTab('${key}')`}
           style={i === 0
-            ? `background:${domain.color};border-color:${domain.color};color:#fff`
+            ? `background:${domain.color};border-color:${domain.color};color:#04040a`
             : `background:transparent;border-color:${domain.color}44;color:#6a6a9a`
-          }>
+          }
+        >
           {label}
         </button>
       ))}
     </div>
-  </div>
 
-  <!-- PANELS -->
-  <div class="px-4 py-4">
-
-    <!-- ANALOGY PANEL -->
-    <div id="panel-analogy">
-      <div class="rounded-xl p-5 mb-4"
-        style={`background:${domain.color}10;border:1px solid ${domain.color}30`}>
-        <div class="text-3xl mb-3">💡</div>
-        <div class="text-[10px] font-black tracking-[2px] uppercase font-mono mb-2"
-          style={`color:${domain.color}`}>
-          THE ANALOGY
-        </div>
-        <p class="text-base text-az-text leading-relaxed italic">
-          {lesson.data.analogy}
-        </p>
+    <!-- ── ANALOGY PANEL ── -->
+    <div id="panel-analogy" class="lesson-panel">
+      <div class="analogy-box" style={`background:${domain.color}0d;border:1px solid ${domain.color}30`}>
+        <div style="font-size:32px;margin-bottom:12px">💡</div>
+        <div class="analogy-label" style={`color:${domain.color}`}>THE ANALOGY</div>
+        <p class="analogy-text">{lesson.data.analogy}</p>
       </div>
 
       {lesson.data.examTrap && (
-        <div class="rounded-xl p-4 mb-4"
-          style="background:#ff3d7108;border:1px solid #ff3d7133;border-left:3px solid #ff3d71">
-          <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-signal mb-2">
-            ⚠️ EXAM TRAP — The Wrong Answer People Choose
-          </div>
-          <p class="text-sm text-[#fca5a5] leading-relaxed">
-            {lesson.data.examTrap}
-          </p>
+        <div class="exam-trap-box">
+          <div class="exam-trap-label">⚠️ EXAM TRAP — The Wrong Answer People Choose</div>
+          <p class="exam-trap-text">{lesson.data.examTrap}</p>
         </div>
       )}
 
-      <div class="rounded-xl p-4 mb-4 bg-az-surface border border-az-border">
-        <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-muted mb-3">
-          KEY POINTS
-        </div>
-        <div class="space-y-2">
+      <div class="key-points-box">
+        <div class="key-points-label">KEY POINTS</div>
+        <div class="key-points-list">
           {lesson.data.keyPoints.map((point, i) => (
-            <div class="flex gap-3 text-sm text-az-subtle leading-relaxed">
-              <span class="font-black flex-shrink-0 mt-0.5" style={`color:${domain.color}`}>
-                {i + 1}.
-              </span>
-              <span>{point}</span>
+            <div class="key-point">
+              <span class="key-point-num" style={`color:${domain.color}`}>{i + 1}</span>
+              <span class="key-point-text">{point}</span>
             </div>
           ))}
         </div>
       </div>
 
       <button
-        class="az-btn-primary"
+        class="lesson-advance-btn"
         style={`background:${domain.color};border-color:${domain.color}`}
         onclick="switchTab('concept')">
-        Learn the Concept →
+        Read the Concept →
       </button>
     </div>
 
-    <!-- CONCEPT PANEL -->
-    <div id="panel-concept" class="hidden">
-      <div class="prose prose-invert prose-sm max-w-none
-        prose-headings:text-white prose-headings:font-black
-        prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3
-        prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2
-        prose-p:text-az-subtle prose-p:leading-relaxed
-        prose-code:text-az-electric prose-code:bg-az-black prose-code:px-1 prose-code:rounded prose-code:text-xs
-        prose-pre:bg-az-black prose-pre:border prose-pre:border-az-border prose-pre:rounded-lg prose-pre:p-4
-        prose-strong:text-white prose-strong:font-bold
-        prose-li:text-az-subtle prose-li:leading-relaxed
-        prose-table:text-xs prose-th:text-az-text prose-td:text-az-subtle
-        prose-blockquote:border-az-electric prose-blockquote:text-az-subtle">
+    <!-- ── CONCEPT PANEL ── -->
+    <div id="panel-concept" class="lesson-panel hidden">
+      <div class="prose-lesson">
         <Content/>
       </div>
-
-      <div class="mt-6">
-        <button
-          class="az-btn-primary"
-          style={`background:${domain.color};border-color:${domain.color}`}
-          onclick="switchTab('technical')">
-          Go Technical →
-        </button>
-      </div>
+      <button
+        class="lesson-advance-btn"
+        style={`background:${domain.color};border-color:${domain.color};margin-top:24px`}
+        onclick="switchTab('technical')">
+        Go Technical →
+      </button>
     </div>
 
-    <!-- TECHNICAL PANEL -->
-    <div id="panel-technical" class="hidden">
+    <!-- ── TECHNICAL PANEL ── -->
+    <div id="panel-technical" class="lesson-panel hidden">
 
       {lesson.data.antiPatterns && lesson.data.antiPatterns.length > 0 && (
-        <div class="rounded-xl p-4 mb-4"
-          style="background:#ff3d7108;border:1px solid #ff3d7133">
-          <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-signal mb-3">
-            ANTI-PATTERNS — DO NOT DO THESE
-          </div>
-          <div class="space-y-2">
-            {lesson.data.antiPatterns.map(ap => (
-              <div class="flex gap-2 text-sm text-[#fca5a5] leading-relaxed">
-                <span class="flex-shrink-0">✗</span>
-                <span>{ap}</span>
-              </div>
-            ))}
-          </div>
+        <div class="anti-patterns-box">
+          <div class="anti-patterns-label">ANTI-PATTERNS — DO NOT DO THESE</div>
+          {lesson.data.antiPatterns.map(ap => (
+            <div class="anti-pattern-item">
+              <span class="anti-pattern-x">✗</span>
+              <span class="anti-pattern-text">{ap}</span>
+            </div>
+          ))}
         </div>
       )}
 
-      <div class="rounded-xl p-4 mb-4 bg-az-card border border-az-border">
-        <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-muted mb-3">
-          DOMAIN CONTEXT
-        </div>
-        <div class="text-xs text-az-muted leading-relaxed space-y-1">
-          <div>Domain: <span class="text-white">{domain.code} — {domain.title}</span></div>
-          {lesson.data.taskRef && (
-            <div>Task Statement: <span class="text-white">{lesson.data.taskRef}</span></div>
-          )}
-          <div>XP Value: <span class="text-white">+{lesson.data.xp} XP</span></div>
-          <div>Duration: <span class="text-white">{lesson.data.duration}</span></div>
-        </div>
+      <div class="lesson-meta-detail">
+        <div class="lesson-meta-detail-label">Domain</div>
+        <div class="lesson-meta-detail-val">{domain.code} — {domain.title}</div>
+        {lesson.data.taskRef && (
+          <>
+            <div class="lesson-meta-detail-label">Task Statement</div>
+            <div class="lesson-meta-detail-val">{lesson.data.taskRef}</div>
+          </>
+        )}
+        <div class="lesson-meta-detail-label">XP Value</div>
+        <div class="lesson-meta-detail-val">+{lesson.data.xp} XP</div>
       </div>
 
-      <!-- MARK COMPLETE -->
-      <div id="complete-section">
+      <!-- Complete + Teach-back -->
+      <div id="complete-section" style="margin-top:20px">
         <button
           id="complete-btn"
-          class="az-btn-primary mb-3"
+          class="lesson-advance-btn"
           style={`background:${domain.color};border-color:${domain.color}`}
           onclick={`completeLesson('${lesson.data.id}', ${lesson.data.xp})`}>
           ✓ Mark Complete · +{lesson.data.xp} XP
         </button>
-        <div id="complete-done" class="hidden text-center py-3 font-bold"
-          style={`color:${domain.color}`}>
+        <div id="complete-done" class="lesson-done-msg hidden" style={`color:${domain.color}`}>
           ✓ Complete · {lesson.data.xp} XP earned
         </div>
       </div>
 
-      <!-- TEACH-BACK BUTTON -->
       <a href={`/teachback?lesson=${lesson.data.id}`}
-        class="az-btn block text-center mb-3 no-underline"
-        style="background:#00e5ff10;border:2px solid #00e5ff44;color:#00e5ff">
+        class="lesson-teachback-btn">
         🎤 Teach this back — prove you know it
       </a>
 
-      <a href={`/learn/${domain.id}`} class="az-btn-ghost block text-center no-underline">
+      <!-- Prev/Next navigation -->
+      <div class="lesson-prevnext">
+        {prevLesson && (
+          <a href={`/learn/${domain.id}/${prevLesson.slug.split('/').pop()}`}
+            class="lesson-prevnext-btn">
+            ← {prevLesson.data.title}
+          </a>
+        )}
+        {nextLesson && (
+          <a href={`/learn/${domain.id}/${nextLesson.slug.split('/').pop()}`}
+            class="lesson-prevnext-btn lesson-prevnext-next"
+            style={`background:${domain.color}15;border-color:${domain.color}44;color:${domain.color}`}>
+            {nextLesson.data.title} →
+          </a>
+        )}
+      </div>
+
+      <a href={`/learn/${domain.id}`}
+        class="lesson-back-domain">
         ← Back to {domain.code}
       </a>
     </div>
 
   </div>
+
+</div>
+
 </BaseLayout>
+
+<style>
+/* ── LESSON LAYOUT ─────────────────────────────── */
+.lesson-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+@media (max-width: 900px) {
+  .lesson-layout { grid-template-columns: 1fr; }
+  .lesson-sidebar { display: none; }
+}
+
+/* ── LESSON SIDEBAR ────────────────────────────── */
+.lesson-sidebar {
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--deep);
+  scrollbar-width: thin;
+}
+.lesson-sidebar-inner { padding: 0 0 40px; }
+
+.lesson-domain-header {
+  padding: 16px 14px 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.lesson-back-top {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.lesson-back-top:hover { color: var(--electric); }
+.lesson-domain-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+}
+.lesson-domain-code {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.lesson-domain-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--subtle);
+  line-height: 1.4;
+}
+
+.lesson-nav-tree { padding: 4px 6px; }
+.lesson-task-group { margin-bottom: 2px; }
+.lesson-task-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 8px 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lesson-task-ref { opacity: 0.7; }
+.lesson-task-name-small {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--subtle);
+  opacity: 1;
+  line-height: 1.4;
+}
+.lesson-nav-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+  transition: all 0.15s;
+}
+.lesson-nav-link:hover { background: var(--surface); color: var(--subtle); }
+.lesson-nav-link.active {
+  background: var(--surface);
+  color: var(--white);
+  font-weight: 600;
+}
+.lesson-nav-link.completed .lesson-nav-dot { background: var(--green) !important; }
+.lesson-nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  margin-top: 4px;
+  transition: background 0.2s;
+}
+.lesson-nav-title { flex: 1; }
+
+/* ── LESSON CONTENT ────────────────────────────── */
+.lesson-content-wrap {
+  padding: 24px 40px 60px;
+  max-width: 800px;
+}
+@media (max-width: 1100px) {
+  .lesson-content-wrap { padding: 20px 24px 48px; }
+}
+
+.lesson-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.lesson-bc-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+.lesson-bc-link:hover { color: var(--text); }
+.lesson-bc-sep { color: var(--muted); font-size: 12px; }
+.lesson-bc-ref {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.lesson-meta-bar { display: flex; align-items: center; margin-bottom: 12px; }
+.lesson-meta-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.lesson-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.lesson-tag-muted {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.lesson-title {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-size: clamp(24px, 3vw, 40px);
+  color: var(--white);
+  letter-spacing: 1px;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+/* ── STEP TABS ─────────────────────────────────── */
+.lesson-step-tabs {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+}
+.lesson-step-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+/* ── PANELS ────────────────────────────────────── */
+.lesson-panel { }
+.lesson-panel.hidden { display: none; }
+
+/* Analogy */
+.analogy-box {
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.analogy-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.analogy-text {
+  font-size: 16px;
+  color: var(--text);
+  line-height: 1.85;
+  font-style: italic;
+}
+
+/* Exam trap */
+.exam-trap-box {
+  background: rgba(255,61,113,0.05);
+  border: 1px solid rgba(255,61,113,0.25);
+  border-left: 3px solid #ff3d71;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.exam-trap-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #ff3d71;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.exam-trap-text { font-size: 14px; color: #fca5a5; line-height: 1.7; }
+
+/* Key points */
+.key-points-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+.key-points-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.key-points-list { display: flex; flex-direction: column; gap: 10px; }
+.key-point { display: flex; gap: 12px; }
+.key-point-num { font-size: 14px; font-weight: 900; flex-shrink: 0; }
+.key-point-text { font-size: 14px; color: var(--subtle); line-height: 1.7; }
+
+/* Anti-patterns */
+.anti-patterns-box {
+  background: rgba(255,61,113,0.05);
+  border: 1px solid rgba(255,61,113,0.2);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.anti-patterns-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #ff3d71;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.anti-pattern-item { display: flex; gap: 10px; margin-bottom: 6px; font-size: 13px; color: #fca5a5; }
+.anti-pattern-x { flex-shrink: 0; }
+
+/* Lesson meta detail */
+.lesson-meta-detail {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.lesson-meta-detail-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  align-self: center;
+}
+.lesson-meta-detail-val { color: var(--text); font-weight: 600; align-self: center; }
+
+/* Buttons */
+.lesson-advance-btn {
+  display: block;
+  width: 100%;
+  padding: 13px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid;
+  text-align: center;
+  transition: all 0.15s;
+  margin-bottom: 10px;
+  color: #04040a;
+}
+.lesson-advance-btn:hover { filter: brightness(1.1); }
+.lesson-done-msg { text-align: center; padding: 13px; font-weight: 700; margin-bottom: 10px; }
+.lesson-teachback-btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid rgba(0,229,255,0.4);
+  background: rgba(0,229,255,0.07);
+  color: #00e5ff;
+  text-align: center;
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: all 0.15s;
+}
+.lesson-teachback-btn:hover { border-color: #00e5ff; background: rgba(0,229,255,0.12); }
+
+/* Prev/next */
+.lesson-prevnext {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.lesson-prevnext-btn {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  color: var(--subtle);
+  line-height: 1.4;
+  transition: all 0.15s;
+}
+.lesson-prevnext-btn:hover { border-color: var(--muted); color: var(--text); }
+.lesson-prevnext-next { text-align: right; }
+
+.lesson-back-domain {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: none;
+  text-align: center;
+  letter-spacing: 1px;
+  padding: 8px;
+  transition: color 0.15s;
+}
+.lesson-back-domain:hover { color: var(--text); }
+</style>
 
 <script>
   // Tab switching
   function switchTab(tab: string) {
     ['analogy','concept','technical'].forEach(t => {
       const panel = document.getElementById(`panel-${t}`);
-      const btn = document.getElementById(`tab-${t}`);
       if (panel) panel.classList.toggle('hidden', t !== tab);
     });
+    // Update button styles would require dynamic color — just toggle classes
   }
 
   // Mark lesson complete
@@ -210,34 +675,37 @@ const domain = DOMAINS.find(d => d.id === lesson.data.domain)!;
     if (completed.includes(lessonId)) return;
     completed.push(lessonId);
     localStorage.setItem('az_completed', JSON.stringify(completed));
-
-    // Add XP
     const xp = Number(localStorage.getItem('az_xp') || '0') + xpAmount;
     localStorage.setItem('az_xp', String(xp));
-
-    // Update UI
-    const btn = document.getElementById('complete-btn');
-    const done = document.getElementById('complete-done');
-    if (btn) btn.classList.add('hidden');
-    if (done) done.classList.remove('hidden');
-
-    // Dispatch XP event for header update
-    window.dispatchEvent(new CustomEvent('xp-updated', { detail: { xp } }));
+    document.getElementById('complete-btn')?.classList.add('hidden');
+    document.getElementById('complete-done')?.classList.remove('hidden');
+    // Mark current lesson in sidebar
+    document.querySelectorAll(`[data-lesson-id="${lessonId}"]`).forEach(el => {
+      el.classList.add('completed');
+      const dot = el.querySelector('.lesson-nav-dot') as HTMLElement;
+      if (dot) dot.style.background = '#00f593';
+    });
+    window.dispatchEvent(new CustomEvent('xp-updated'));
   }
 
-  // Check if already completed on load
-  window.addEventListener('DOMContentLoaded', () => {
-    const lessonId = document.getElementById('complete-btn')
-      ?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-    if (!lessonId) return;
-    const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
-    if (completed.includes(lessonId)) {
-      document.getElementById('complete-btn')?.classList.add('hidden');
-      document.getElementById('complete-done')?.classList.remove('hidden');
-    }
+  // Check completion on load
+  const lessonId = '${lesson.data.id}';
+  const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
+
+  if (completed.includes(lessonId)) {
+    document.getElementById('complete-btn')?.classList.add('hidden');
+    document.getElementById('complete-done')?.classList.remove('hidden');
+  }
+
+  // Mark completed lessons in sidebar
+  completed.forEach(id => {
+    document.querySelectorAll(`.lesson-nav-link[data-lesson-id="${id}"]`).forEach(el => {
+      el.classList.add('completed');
+      const dot = el.querySelector('.lesson-nav-dot') as HTMLElement;
+      if (dot) dot.style.background = '#00f593';
+    });
   });
 
-  // Make functions global
   (window as any).switchTab = switchTab;
   (window as any).completeLesson = completeLesson;
 </script>
