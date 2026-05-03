@@ -1,0 +1,496 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { DOMAINS } from '../lib/domains';
+---
+
+<BaseLayout>
+
+  <!-- ══════════════════════════════════
+       HERO SECTION
+       ══════════════════════════════════ -->
+  <section class="hero-section">
+
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-line"></span>
+      <span>The Quantum Learn presents</span>
+      <span class="hero-eyebrow-line"></span>
+    </div>
+
+    <div class="hero-headline">
+      <h1 class="hero-title">
+        ARCHITECT <span class="text-electric">ZERO</span>
+      </h1>
+      <p class="hero-tagline">
+        From zero to Claude Certified Architect — in real time.
+      </p>
+    </div>
+
+    <p class="hero-description">
+      The most complete CCA exam preparation resource available.
+      108 lessons across 7 domains. 108 practice questions. 90 flashcards.
+      An AI tutor that knows the exam. A teach-back mode that proves you've mastered it.
+      <strong style="color:white">No shortcuts. No surface-level summaries. Real mastery.</strong>
+    </p>
+
+    <!-- Stat row -->
+    <div class="hero-stats">
+      {[
+        { label: 'Lessons',    value: '108',  id: null,             color: '#6366f1', note: '7 domains'   },
+        { label: 'Questions',  value: '108',  id: null,             color: '#ef4444', note: '6 scenarios' },
+        { label: 'Flashcards', value: '90',   id: null,             color: '#f59e0b', note: 'spaced rep'  },
+        { label: 'Completed',  value: '—',    id: 'stat-completed', color: '#10b981', note: 'lessons done'},
+        { label: 'XP',         value: '—',    id: 'stat-xp',        color: '#ffd60a', note: 'earned'      },
+        { label: 'Streak',     value: '—',    id: 'stat-streak',    color: '#ff3d71', note: 'days'        },
+      ].map(({ label, value, id, color, note }) => (
+        <div class="hero-stat">
+          <div class="hero-stat-value" id={id || ''} style={`color:${color}`}>{value}</div>
+          <div class="hero-stat-label">{label}</div>
+          <div class="hero-stat-note">{note}</div>
+        </div>
+      ))}
+    </div>
+
+    <!-- CTA row -->
+    <div class="hero-cta">
+      <a href="/learn/d0" class="az-btn az-btn-primary" style="font-size:15px;padding:14px 32px">
+        Start Learning →
+      </a>
+      <a href="/teachback" class="az-btn az-btn-ghost" style="font-size:15px;padding:14px 32px">
+        🎤 Teach-Back Mode
+      </a>
+      <a href="/quiz" class="az-btn az-btn-ghost" style="font-size:15px;padding:14px 32px">
+        ❓ Practice Exam
+      </a>
+    </div>
+
+    <!-- Exam format pill -->
+    <div class="hero-exam-pill">
+      <span class="hero-exam-dot"></span>
+      60 questions · 120 min · 720/1000 to pass · 4 of 6 scenarios · Closed book
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════
+       TEACH-BACK FEATURE BANNER
+       ══════════════════════════════════ -->
+  <section class="teachback-banner">
+    <div class="teachback-banner-content">
+      <div>
+        <div class="section-eyebrow" style="color:#00e5ff">Mastery Engine</div>
+        <div class="teachback-banner-title">Teach-Back Mode</div>
+        <p class="teachback-banner-desc">
+          Studying is not enough. After every lesson, explain the concept back to Claude
+          — as if teaching a 13-year-old, then defending it to a senior architect,
+          then delivering it camera-ready for Architect Zero Episode recording.
+          <strong style="color:white">Three rounds. Real mastery.</strong>
+        </p>
+        <a href="/teachback" class="az-btn" style="background:#00e5ff;border-color:#00e5ff;color:#04040a;display:inline-block;margin-top:16px;width:auto">
+          Try Teach-Back →
+        </a>
+      </div>
+      <div class="teachback-banner-rounds">
+        {[
+          { num: '①', label: 'Explain to a 13yr old',   desc: 'Build intuition first',           xp: '+30 XP', color: '#06b6d4' },
+          { num: '②', label: 'Defend to an Architect',  desc: 'Production depth + anti-patterns', xp: '+40 XP', color: '#6366f1' },
+          { num: '③', label: 'Camera ready test',       desc: 'Architect Zero episode quality',   xp: '+50 XP', color: '#ffd60a' },
+        ].map(({ num, label, desc, xp, color }) => (
+          <div class="teachback-round" style={`border-color:${color}33`}>
+            <div class="teachback-round-num" style={`color:${color}`}>{num}</div>
+            <div>
+              <div class="teachback-round-label" style={`color:${color}`}>{label}</div>
+              <div class="teachback-round-desc">{desc}</div>
+            </div>
+            <div class="teachback-round-xp" style={`color:${color};background:${color}15;border-color:${color}33`}>{xp}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       DOMAIN GRID
+       ══════════════════════════════════ -->
+  <section class="domains-section">
+    <div class="page-header" style="border:none;margin-bottom:24px;padding:0">
+      <div class="section-eyebrow">Curriculum</div>
+      <h2 class="section-title">7 DOMAINS · <span>108 LESSONS</span></h2>
+      <p class="page-subtitle">
+        Every task statement from the official Anthropic exam guide, expanded into 3 lessons each.
+        Plus Domain 6 — Cross-Domain Mastery — which no other prep resource has.
+      </p>
+    </div>
+
+    <div class="domains-grid">
+      {DOMAINS.map(domain => (
+        <a href={`/learn/${domain.id}`} class="domain-card" style={`--domain-color:${domain.color}`}>
+          <div class="domain-card-top">
+            <span class="domain-card-icon">{domain.icon}</span>
+            <div class="domain-card-tags">
+              <span class="az-tag" style={`color:${domain.color};border-color:${domain.color}44;background:${domain.color}12`}>
+                {domain.tag}
+              </span>
+              {domain.examWeight && (
+                <span class="domain-card-weight" style={`color:${domain.color}`}>
+                  {domain.examWeight}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div class="domain-card-code" style={`color:${domain.color}`}>{domain.code}</div>
+          <div class="domain-card-title">{domain.title}</div>
+          <div class="domain-card-subtitle">{domain.subtitle}</div>
+
+          <div class="domain-card-meta">
+            <span>{domain.lessonCount} lessons</span>
+            {domain.taskCount > 0 && <span>{domain.taskCount} task statements</span>}
+          </div>
+
+          <div class="domain-pbar" style="margin-top:12px">
+            <div class="domain-pbar-fill" id={`pbar-${domain.id}`}
+              style={`width:0%;background:${domain.color}`}></div>
+          </div>
+
+          <div class="domain-card-progress">
+            <span class="domain-card-pct" id={`pct-${domain.id}`} style={`color:${domain.color}`}>
+              0%
+            </span>
+            <span class="domain-card-arrow" style={`color:${domain.color}`}>→</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       QUICK ACCESS ROW
+       ══════════════════════════════════ -->
+  <section class="quick-access">
+    {[
+      {
+        href: '/quiz',
+        icon: '❓',
+        title: 'Practice Exam',
+        desc: '108 scenario-based questions across all 6 official CCA exam scenarios. Harder than the real exam — intentionally.',
+        tag: '6 Scenarios',
+        color: '#ef4444',
+      },
+      {
+        href: '/flashcards',
+        icon: '🃏',
+        title: 'Flashcards',
+        desc: '90 cards covering every key term, decision framework, and anti-pattern. Filter by domain. Spaced repetition.',
+        tag: '90 Cards',
+        color: '#f59e0b',
+      },
+      {
+        href: '/tutor',
+        icon: '🤖',
+        title: 'AI Tutor',
+        desc: 'Ask Claude anything about the exam. Context-aware to which domain you\'re studying. SAP/enterprise analogy mode included.',
+        tag: 'Claude-Powered',
+        color: '#06b6d4',
+      },
+      {
+        href: '/progress',
+        icon: '📊',
+        title: 'Progress',
+        desc: 'Domain completion, XP level path, exam readiness score, and what to study next. Honest, not motivational.',
+        tag: 'Track Everything',
+        color: '#10b981',
+      },
+    ].map(({ href, icon, title, desc, tag, color }) => (
+      <a href={href} class="quick-card az-card az-card-hover">
+        <div class="quick-card-icon" style={`color:${color}`}>{icon}</div>
+        <div class="az-tag" style={`color:${color};border-color:${color}44;background:${color}12;margin-bottom:10px`}>
+          {tag}
+        </div>
+        <div class="quick-card-title">{title}</div>
+        <div class="quick-card-desc">{desc}</div>
+        <div class="quick-card-link" style={`color:${color}`}>Open {title} →</div>
+      </a>
+    ))}
+  </section>
+
+  <!-- ══════════════════════════════════
+       EXAM FORMAT REMINDER
+       ══════════════════════════════════ -->
+  <section class="exam-reminder">
+    <div class="exam-reminder-inner">
+      <div class="section-eyebrow" style="color:#00f593;margin-bottom:12px">
+        Exam Format
+      </div>
+      <div class="exam-reminder-grid">
+        {[
+          { label: 'Questions',    val: '60' },
+          { label: 'Time',         val: '120 min' },
+          { label: 'Pass Score',   val: '720 / 1000' },
+          { label: 'Scenarios',    val: '4 of 6 randomly selected' },
+          { label: 'Format',       val: 'Closed book, proctored' },
+          { label: 'Fee',          val: '$99 (free for partner employees)' },
+        ].map(({ label, val }) => (
+          <div class="exam-fact">
+            <div class="exam-fact-label">{label}</div>
+            <div class="exam-fact-val">{val}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
+
+<style>
+/* ── HERO ─────────────────────────────────── */
+.hero-section {
+  padding: 48px 0 56px;
+  position: relative;
+}
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.hero-eyebrow-line { flex: 0 0 40px; height: 1px; background: var(--border); }
+.hero-headline { margin-bottom: 20px; }
+.hero-title {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-size: clamp(56px, 8vw, 100px);
+  color: white;
+  letter-spacing: 3px;
+  line-height: 0.92;
+  margin-bottom: 10px;
+}
+.hero-tagline {
+  font-size: clamp(14px, 2vw, 20px);
+  color: var(--subtle);
+  font-weight: 300;
+  font-style: italic;
+}
+.hero-description {
+  max-width: 680px;
+  font-size: 15px;
+  color: var(--subtle);
+  line-height: 1.8;
+  margin-bottom: 32px;
+}
+.hero-stats {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  max-width: 800px;
+}
+.hero-stat {
+  flex: 1;
+  padding: 16px 20px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat-value { font-size: 28px; font-weight: 900; margin-bottom: 2px; font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 1px; }
+.hero-stat-label { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.hero-stat-note  { font-size: 9px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.hero-cta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.hero-exam-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+.hero-exam-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  flex-shrink: 0;
+}
+
+/* ── TEACH-BACK BANNER ───────────────── */
+.teachback-banner {
+  margin-bottom: 56px;
+  background: var(--deep);
+  border: 1px solid var(--electric);
+  border-color: rgba(0,229,255,0.2);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.teachback-banner::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(0,229,255,0.05), transparent);
+  pointer-events: none;
+}
+.teachback-banner-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  padding: 40px 48px;
+  position: relative;
+}
+@media (max-width: 900px) {
+  .teachback-banner-content { grid-template-columns: 1fr; gap: 24px; padding: 28px 24px; }
+}
+.teachback-banner-title {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-size: 40px;
+  color: white;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.teachback-banner-desc {
+  font-size: 14px;
+  color: var(--subtle);
+  line-height: 1.8;
+}
+.teachback-banner-rounds { display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+.teachback-round {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(0,229,255,0.04);
+  border: 1px solid;
+  border-radius: 8px;
+}
+.teachback-round-num { font-family: 'Bebas Neue', Impact, sans-serif; font-size: 22px; flex-shrink: 0; }
+.teachback-round-label { font-size: 13px; font-weight: 700; }
+.teachback-round-desc  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.teachback-round-xp {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+/* ── DOMAINS ─────────────────────────── */
+.domains-section { margin-bottom: 56px; }
+.domains-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.domain-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--domain-color, #6366f1);
+  border-radius: 12px;
+  padding: 24px;
+  text-decoration: none;
+  display: block;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.domain-card:hover {
+  border-color: var(--domain-color, #6366f1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.domain-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.domain-card-icon { font-size: 24px; }
+.domain-card-tags { display: flex; align-items: center; gap: 8px; }
+.domain-card-weight { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800; }
+.domain-card-code { font-family: 'Bebas Neue', Impact, sans-serif; font-size: 32px; letter-spacing: 2px; line-height: 1; margin-bottom: 4px; opacity: 0.25; }
+.domain-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 4px; }
+.domain-card-subtitle { font-size: 12px; color: var(--subtle); margin-bottom: 12px; line-height: 1.5; }
+.domain-card-meta { display: flex; gap: 12px; }
+.domain-card-meta span { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+.domain-card-progress { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.domain-card-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; }
+.domain-card-arrow { font-size: 14px; opacity: 0; transition: opacity 0.15s; }
+.domain-card:hover .domain-card-arrow { opacity: 1; }
+
+/* ── QUICK ACCESS ────────────────────── */
+.quick-access {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 56px;
+}
+@media (max-width: 1000px) { .quick-access { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .quick-access { grid-template-columns: 1fr; } }
+.quick-card { display: flex; flex-direction: column; }
+.quick-card-icon { font-size: 32px; margin-bottom: 12px; }
+.quick-card-title { font-size: 16px; font-weight: 800; color: white; margin-bottom: 8px; }
+.quick-card-desc  { font-size: 13px; color: var(--subtle); line-height: 1.7; flex: 1; margin-bottom: 16px; }
+.quick-card-link  { font-size: 12px; font-weight: 700; margin-top: auto; }
+
+/* ── EXAM REMINDER ───────────────────── */
+.exam-reminder { margin-bottom: 48px; }
+.exam-reminder-inner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  padding: 28px 32px;
+}
+.exam-reminder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 768px) { .exam-reminder-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .exam-reminder-grid { grid-template-columns: 1fr; } }
+.exam-fact {}
+.exam-fact-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.exam-fact-val { font-size: 15px; font-weight: 700; color: white; }
+</style>
+
+<script>
+  // Load progress stats
+  function loadStats() {
+    const xp = Number(localStorage.getItem('az_xp') || '0');
+    const streak = Number(localStorage.getItem('az_streak') || '0');
+    const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
+
+    const set = (id: string, v: string) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = v;
+    };
+    set('stat-completed', String(completed.length));
+    set('stat-xp', String(xp));
+    set('stat-streak', `🔥${streak}`);
+
+    // Domain progress bars
+    const domainLessonCounts: Record<string, number> = {
+      d0:6, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12
+    };
+    Object.entries(domainLessonCounts).forEach(([id, total]) => {
+      const done = completed.filter((c: string) => c.startsWith(id)).length;
+      const pct = Math.round((done / total) * 100);
+      const pbar = document.getElementById(`pbar-${id}`);
+      const pct_el = document.getElementById(`pct-${id}`);
+      if (pbar) pbar.style.width = pct + '%';
+      if (pct_el) pct_el.textContent = pct + '%';
+    });
+  }
+  loadStats();
+</script>

@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AppHeader from '../../../components/AppHeader.astro';
+import { getCollection } from 'astro:content';
+import { DOMAINS } from '../../../lib/domains';
+
+export async function getStaticPaths() {
+  return DOMAINS.map((domain) => ({
+    params: { domain: domain.id },
+  }));
+}
+
+const domainId = Astro.params.domain;
+const domain = DOMAINS.find((d) => d.id === domainId);
+
+if (!domain) {
+  throw new Error(`Unknown domain: ${domainId}`);
+}
+
+const lessons = (await getCollection('lessons'))
+  .filter((lesson) => lesson.data.domain === domain.id)
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((lesson) => ({
+    ...lesson,
+    lessonSlug: lesson.slug.split('/').pop() || lesson.slug,
+  }));
+---
+
+<BaseLayout title={`${domain.code} — ${domain.title} — Architect Zero`}>
+  <AppHeader slot="header" title={`${domain.code} · ${domain.title}`} showBack={true} backHref="/learn" />
+
+  <div class="px-4 py-4">
+    <div class="rounded-xl p-4 mb-4" style={`background:${domain.bgColor};border:1px solid ${domain.color}33`}>
+      <div class="flex items-start gap-3">
+        <div class="text-3xl leading-none">{domain.icon}</div>
+        <div class="flex-1">
+          <div class="text-[10px] font-black tracking-[2px] uppercase font-mono mb-2" style={`color:${domain.color}`}>
+            {domain.tag}
+          </div>
+          <div class="text-sm font-black text-white mb-1">{domain.subtitle}</div>
+          <p class="text-xs text-az-muted leading-relaxed">{domain.description}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-xs font-mono text-az-muted mb-3">
+      <span>{lessons.length} published lessons</span>
+      <span id="domain-progress" style={`color:${domain.color}`}>0% complete</span>
+    </div>
+
+    {lessons.length === 0 ? (
+      <div class="lesson-card">
+        <div class="text-sm font-bold text-white mb-2">Lessons are coming soon</div>
+        <p class="text-xs text-az-muted">This domain is available from the home page, but lesson content has not been published yet.</p>
+      </div>
+    ) : (
+      lessons.map((lesson, idx) => (
+        <a href={`/learn/${domain.id}/${lesson.lessonSlug}`} class="block mb-3 no-underline">
+          <div class="lesson-card">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black font-mono px-2 py-1 rounded" style={`color:${domain.color};border:1px solid ${domain.color}44;background:${domain.color}12`}>
+                  {lesson.data.taskRef || `L${idx + 1}`}
+                </span>
+                <span class="text-[10px] font-mono text-az-muted">{lesson.data.duration}</span>
+              </div>
+              <span class="text-[10px] font-black" style={`color:${domain.color}`}>+{lesson.data.xp} XP</span>
+            </div>
+
+            <div class="text-sm font-bold text-white mb-1">{lesson.data.title}</div>
+            <div class="text-xs text-az-muted leading-relaxed mb-2">{lesson.data.analogy}</div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-black px-2 py-0.5 rounded font-mono" style={`color:${domain.color};border:1px solid ${domain.color}33;background:${domain.color}10`}>
+                {lesson.data.tag}
+              </span>
+              <span class="text-xs" style={`color:${domain.color}`}>Open lesson →</span>
+            </div>
+          </div>
+        </a>
+      ))
+    )}
+  </div>
+</BaseLayout>
+
+<script>
+  const domainId = location.pathname.split('/').pop() || '';
+  const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
+  const done = completed.filter((c) => c.startsWith(`${domainId}-`)).length;
+  const total = document.querySelectorAll('a[href^="/learn/"]').length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const progressEl = document.getElementById('domain-progress');
+  if (progressEl) {
+    progressEl.textContent = `${pct}% complete`;
+  }
+</script>

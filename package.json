@@ -1,0 +1,29 @@
+{
+  "name": "architect-zero",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "The Quantum Learn presents Architect Zero — CCA exam mastery app",
+  "scripts": {
+    "dev":     "astro dev",
+    "build":   "astro build",
+    "preview": "astro preview",
+    "sync":    "astro sync"
+  },
+  "dependencies": {
+    "@astrojs/mdx":      "^3.1.0",
+    "@astrojs/react":    "^3.6.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "astro":             "^4.15.0",
+    "nanostores":        "^0.10.3",
+    "@nanostores/react": "^0.7.3",
+    "react":             "^18.3.1",
+    "react-dom":         "^18.3.1",
+    "tailwindcss":       "^3.4.10",
+    "vite-plugin-pwa":   "^0.20.5"
+  },
+  "devDependencies": {
+    "@types/react":      "^18.3.5",
+    "@types/react-dom":  "^18.3.0",
+    "typescript":        "^5.5.4"
+  }
+}

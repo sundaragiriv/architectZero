@@ -1,0 +1,243 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AppHeader from '../../../components/AppHeader.astro';
+import { getCollection, getEntry } from 'astro:content';
+import { DOMAINS } from '../../../lib/domains';
+
+export async function getStaticPaths() {
+  const lessons = await getCollection('lessons');
+  return lessons.map(lesson => ({
+    params: {
+      domain: lesson.data.domain,
+      lesson: lesson.slug.split('/').pop(),
+    },
+    props: { lesson },
+  }));
+}
+
+const { lesson } = Astro.props;
+const { Content } = await lesson.render();
+const domain = DOMAINS.find(d => d.id === lesson.data.domain)!;
+---
+
+<BaseLayout title={`${lesson.data.title} — Architect Zero`}>
+  <AppHeader
+    slot="header"
+    title={lesson.data.title}
+    showBack={true}
+    backHref={`/learn/${domain.id}`}
+  />
+
+  <!-- STEP TABS -->
+  <div class="sticky top-[88px] z-40 bg-az-black px-4 pt-2 pb-2"
+    style={`border-bottom:1px solid ${domain.color}22`}>
+    <div class="flex gap-2">
+      {[
+        { key: 'analogy',   label: '💡 Analogy'  },
+        { key: 'concept',   label: '📖 Concept'  },
+        { key: 'technical', label: '⚙️ Technical' },
+      ].map(({ key, label }, i) => (
+        <button
+          class="step-tab flex-1"
+          id={`tab-${key}`}
+          onclick={`switchTab('${key}')`}
+          style={i === 0
+            ? `background:${domain.color};border-color:${domain.color};color:#fff`
+            : `background:transparent;border-color:${domain.color}44;color:#6a6a9a`
+          }>
+          {label}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <!-- PANELS -->
+  <div class="px-4 py-4">
+
+    <!-- ANALOGY PANEL -->
+    <div id="panel-analogy">
+      <div class="rounded-xl p-5 mb-4"
+        style={`background:${domain.color}10;border:1px solid ${domain.color}30`}>
+        <div class="text-3xl mb-3">💡</div>
+        <div class="text-[10px] font-black tracking-[2px] uppercase font-mono mb-2"
+          style={`color:${domain.color}`}>
+          THE ANALOGY
+        </div>
+        <p class="text-base text-az-text leading-relaxed italic">
+          {lesson.data.analogy}
+        </p>
+      </div>
+
+      {lesson.data.examTrap && (
+        <div class="rounded-xl p-4 mb-4"
+          style="background:#ff3d7108;border:1px solid #ff3d7133;border-left:3px solid #ff3d71">
+          <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-signal mb-2">
+            ⚠️ EXAM TRAP — The Wrong Answer People Choose
+          </div>
+          <p class="text-sm text-[#fca5a5] leading-relaxed">
+            {lesson.data.examTrap}
+          </p>
+        </div>
+      )}
+
+      <div class="rounded-xl p-4 mb-4 bg-az-surface border border-az-border">
+        <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-muted mb-3">
+          KEY POINTS
+        </div>
+        <div class="space-y-2">
+          {lesson.data.keyPoints.map((point, i) => (
+            <div class="flex gap-3 text-sm text-az-subtle leading-relaxed">
+              <span class="font-black flex-shrink-0 mt-0.5" style={`color:${domain.color}`}>
+                {i + 1}.
+              </span>
+              <span>{point}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button
+        class="az-btn-primary"
+        style={`background:${domain.color};border-color:${domain.color}`}
+        onclick="switchTab('concept')">
+        Learn the Concept →
+      </button>
+    </div>
+
+    <!-- CONCEPT PANEL -->
+    <div id="panel-concept" class="hidden">
+      <div class="prose prose-invert prose-sm max-w-none
+        prose-headings:text-white prose-headings:font-black
+        prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3
+        prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2
+        prose-p:text-az-subtle prose-p:leading-relaxed
+        prose-code:text-az-electric prose-code:bg-az-black prose-code:px-1 prose-code:rounded prose-code:text-xs
+        prose-pre:bg-az-black prose-pre:border prose-pre:border-az-border prose-pre:rounded-lg prose-pre:p-4
+        prose-strong:text-white prose-strong:font-bold
+        prose-li:text-az-subtle prose-li:leading-relaxed
+        prose-table:text-xs prose-th:text-az-text prose-td:text-az-subtle
+        prose-blockquote:border-az-electric prose-blockquote:text-az-subtle">
+        <Content/>
+      </div>
+
+      <div class="mt-6">
+        <button
+          class="az-btn-primary"
+          style={`background:${domain.color};border-color:${domain.color}`}
+          onclick="switchTab('technical')">
+          Go Technical →
+        </button>
+      </div>
+    </div>
+
+    <!-- TECHNICAL PANEL -->
+    <div id="panel-technical" class="hidden">
+
+      {lesson.data.antiPatterns && lesson.data.antiPatterns.length > 0 && (
+        <div class="rounded-xl p-4 mb-4"
+          style="background:#ff3d7108;border:1px solid #ff3d7133">
+          <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-signal mb-3">
+            ANTI-PATTERNS — DO NOT DO THESE
+          </div>
+          <div class="space-y-2">
+            {lesson.data.antiPatterns.map(ap => (
+              <div class="flex gap-2 text-sm text-[#fca5a5] leading-relaxed">
+                <span class="flex-shrink-0">✗</span>
+                <span>{ap}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div class="rounded-xl p-4 mb-4 bg-az-card border border-az-border">
+        <div class="text-[9px] font-black tracking-[2px] uppercase font-mono text-az-muted mb-3">
+          DOMAIN CONTEXT
+        </div>
+        <div class="text-xs text-az-muted leading-relaxed space-y-1">
+          <div>Domain: <span class="text-white">{domain.code} — {domain.title}</span></div>
+          {lesson.data.taskRef && (
+            <div>Task Statement: <span class="text-white">{lesson.data.taskRef}</span></div>
+          )}
+          <div>XP Value: <span class="text-white">+{lesson.data.xp} XP</span></div>
+          <div>Duration: <span class="text-white">{lesson.data.duration}</span></div>
+        </div>
+      </div>
+
+      <!-- MARK COMPLETE -->
+      <div id="complete-section">
+        <button
+          id="complete-btn"
+          class="az-btn-primary mb-3"
+          style={`background:${domain.color};border-color:${domain.color}`}
+          onclick={`completeLesson('${lesson.data.id}', ${lesson.data.xp})`}>
+          ✓ Mark Complete · +{lesson.data.xp} XP
+        </button>
+        <div id="complete-done" class="hidden text-center py-3 font-bold"
+          style={`color:${domain.color}`}>
+          ✓ Complete · {lesson.data.xp} XP earned
+        </div>
+      </div>
+
+      <!-- TEACH-BACK BUTTON -->
+      <a href={`/teachback?lesson=${lesson.data.id}`}
+        class="az-btn block text-center mb-3 no-underline"
+        style="background:#00e5ff10;border:2px solid #00e5ff44;color:#00e5ff">
+        🎤 Teach this back — prove you know it
+      </a>
+
+      <a href={`/learn/${domain.id}`} class="az-btn-ghost block text-center no-underline">
+        ← Back to {domain.code}
+      </a>
+    </div>
+
+  </div>
+</BaseLayout>
+
+<script>
+  // Tab switching
+  function switchTab(tab: string) {
+    ['analogy','concept','technical'].forEach(t => {
+      const panel = document.getElementById(`panel-${t}`);
+      const btn = document.getElementById(`tab-${t}`);
+      if (panel) panel.classList.toggle('hidden', t !== tab);
+    });
+  }
+
+  // Mark lesson complete
+  function completeLesson(lessonId: string, xpAmount: number) {
+    const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
+    if (completed.includes(lessonId)) return;
+    completed.push(lessonId);
+    localStorage.setItem('az_completed', JSON.stringify(completed));
+
+    // Add XP
+    const xp = Number(localStorage.getItem('az_xp') || '0') + xpAmount;
+    localStorage.setItem('az_xp', String(xp));
+
+    // Update UI
+    const btn = document.getElementById('complete-btn');
+    const done = document.getElementById('complete-done');
+    if (btn) btn.classList.add('hidden');
+    if (done) done.classList.remove('hidden');
+
+    // Dispatch XP event for header update
+    window.dispatchEvent(new CustomEvent('xp-updated', { detail: { xp } }));
+  }
+
+  // Check if already completed on load
+  window.addEventListener('DOMContentLoaded', () => {
+    const lessonId = document.getElementById('complete-btn')
+      ?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if (!lessonId) return;
+    const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
+    if (completed.includes(lessonId)) {
+      document.getElementById('complete-btn')?.classList.add('hidden');
+      document.getElementById('complete-done')?.classList.remove('hidden');
+    }
+  });
+
+  // Make functions global
+  (window as any).switchTab = switchTab;
+  (window as any).completeLesson = completeLesson;
+</script>
