@@ -150,6 +150,13 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
 
     <h1 class="lesson-title">{lesson.data.title}</h1>
 
+    <div
+      id="lesson-meta-data"
+      data-lesson-id={lesson.data.id}
+      data-lesson-xp={String(lesson.data.xp)}
+      style="display:none"
+    ></div>
+
     <!-- Step tabs -->
     <div class="lesson-step-tabs" style={`border-bottom:1px solid ${domain.color}22`}>
       {[
@@ -671,6 +678,9 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
 
   // Mark lesson complete
   function completeLesson(lessonId: string, xpAmount: number) {
+    // Fallback: read XP from DOM if argument is 0 or missing
+    const metaEl2 = document.getElementById('lesson-meta-data');
+    if (!xpAmount && metaEl2) xpAmount = Number(metaEl2.dataset.lessonXp || 0);
     const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
     if (completed.includes(lessonId)) return;
     completed.push(lessonId);
@@ -688,17 +698,19 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
     window.dispatchEvent(new CustomEvent('xp-updated'));
   }
 
-  // Check completion on load
-  const lessonId = '${lesson.data.id}';
+  // Read lesson identity from DOM data attribute — Astro never interpolates in <script>
+  const metaEl = document.getElementById('lesson-meta-data');
+  const lessonId = metaEl?.dataset.lessonId || '';
+
   const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
 
-  if (completed.includes(lessonId)) {
+  if (lessonId && completed.includes(lessonId)) {
     document.getElementById('complete-btn')?.classList.add('hidden');
     document.getElementById('complete-done')?.classList.remove('hidden');
   }
 
   // Mark completed lessons in sidebar
-  completed.forEach(id => {
+  completed.forEach((id: string) => {
     document.querySelectorAll(`.lesson-nav-link[data-lesson-id="${id}"]`).forEach(el => {
       el.classList.add('completed');
       const dot = el.querySelector('.lesson-nav-dot') as HTMLElement;

@@ -16,11 +16,9 @@ const currentPath = Astro.url.pathname;
 const navItems = [
   { href: '/',           icon: '◈',  emoji: '🏠', label: 'Dashboard'  },
   { href: '/learn',      icon: '▤',  emoji: '📚', label: 'Learn'       },
-  { href: '/quiz',       icon: '◉',  emoji: '❓', label: 'Practice'    },
+  { href: '/quiz',       icon: '◉',  emoji: '🎯', label: 'Quiz'        },
   { href: '/flashcards', icon: '◫',  emoji: '🃏', label: 'Flashcards'  },
-  { href: '/teachback',  icon: '◎',  emoji: '🎤', label: 'Teach-Back'  },
-  { href: '/tutor',      icon: '◬',  emoji: '🤖', label: 'AI Tutor'    },
-  { href: '/progress',   icon: '◑',  emoji: '📊', label: 'Progress'    },
+  { href: '/progress',   icon: '◑',  emoji: '📈', label: 'Progress'    },
 ];
 
 function isActive(href: string) {

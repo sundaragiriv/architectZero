@@ -173,12 +173,17 @@ const firstLessonSlug = firstLesson?.slug.split('/').pop();
         </div>
       </div>
 
-      {firstLesson && (
+      {domainLessons.length > 0 && firstLesson && firstLessonSlug && firstLessonSlug !== 'undefined' ? (
         <a href={`/learn/${domain.id}/${firstLessonSlug}`} class="domain-start-btn"
           style={`background:${domain.color};color:#04040a`}>
-          {domainLessons.length > 0 ? 'Continue →' : 'Start →'}
+          Start →
         </a>
-      )}
+      ) : domainLessons.length === 0 ? (
+        <div class="domain-start-btn"
+          style="background:var(--border);color:var(--muted);cursor:not-allowed;opacity:0.5;display:inline-block;padding:10px 28px;border-radius:8px;font-weight:800;font-size:14px;text-align:center">
+          Coming Soon
+        </div>
+      ) : null}
     </div>
 
     <!-- Task statement cards -->
