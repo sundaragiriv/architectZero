@@ -16,9 +16,9 @@
   --surface:  #0d0d1c;
   --card:     #111125;
   --border:   #1a1a30;
-  --muted:    #35355a;
-  --subtle:   #6a6a9a;
-  --text:     #dde1f0;
+  --muted:    #4a4a70;
+  --subtle:   #8888b8;
+  --text:     #e8ecf8;
   --white:    #ffffff;
   --electric: #00e5ff;
   --signal:   #ff3d71;
@@ -44,6 +44,7 @@ html {
   color: var(--text);
   font-family: 'DM Sans', system-ui, sans-serif;
   scroll-behavior: smooth;
+    font-size: 16px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -153,7 +154,7 @@ body::before {
   margin-bottom: 6px;
 }
 .sidebar-level-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--subtle);
 }
@@ -635,7 +636,7 @@ body::before {
 .step-tab {
   padding: 8px 20px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   border: 1px solid;

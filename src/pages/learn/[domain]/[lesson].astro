@@ -48,107 +48,40 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
 
 <BaseLayout title={`${lesson.data.title} — Architect Zero`}>
 
-<div class="lesson-layout">
+<div class="lesson-page">
 
-  <!-- ── LEFT SIDEBAR: Domain tree nav ── -->
-  <aside class="lesson-sidebar" id="lesson-sidebar">
-    <div class="lesson-sidebar-inner">
+  <!-- Breadcrumb + title + chips -->
+  <div class="lesson-topnav">
+    <a href="/learn" class="lesson-topnav-link">Learn</a>
+    <span class="lesson-topnav-sep">›</span>
+    <a href={`/learn/${domain.id}`} class="lesson-topnav-link" style={`color:${domain.color}`}>
+      {domain.code} · {domain.title}
+    </a>
+    {lesson.data.taskRef && (
+      <>
+        <span class="lesson-topnav-sep">›</span>
+        <span class="lesson-topnav-ref" style={`color:${domain.color}99`}>{lesson.data.taskRef}</span>
+      </>
+    )}
+  </div>
 
-      <!-- Domain link -->
-      <div class="lesson-domain-header" style={`border-left:3px solid ${domain.color}`}>
-        <a href="/learn" class="lesson-back-top">← All Domains</a>
-        <a href={`/learn/${domain.id}`} class="lesson-domain-link">
-          <span class="lesson-domain-code" style={`color:${domain.color}`}>{domain.code}</span>
-          <span class="lesson-domain-name">{domain.title}</span>
-        </a>
-      </div>
+  <h1 class="lesson-heading">{lesson.data.title}</h1>
 
-      <!-- Nav tree -->
-      <nav class="lesson-nav-tree">
-
-        {noTaskLessons.length > 0 && (
-          <div class="lesson-task-group">
-            <div class="lesson-task-label" style={`color:${domain.color}`}>Lessons</div>
-            {noTaskLessons.map(l => {
-              const slug = l.slug.split('/').pop();
-              const isActive = l.data.id === lesson.data.id;
-              return (
-                <a
-                  href={`/learn/${domain.id}/${slug}`}
-                  class={`lesson-nav-link ${isActive ? 'active' : ''}`}
-                  data-lesson-id={l.data.id}
-                >
-                  <span class="lesson-nav-dot" style={isActive ? `background:${domain.color}` : ''}></span>
-                  <span class="lesson-nav-title">{l.data.title}</span>
-                </a>
-              );
-            })}
-          </div>
-        )}
-
-        {Object.entries(taskGroups).sort().map(([ref, lessons]) => {
-          const taskInfo = taskMap[ref];
-          const hasActive = lessons.some(l => l.data.id === lesson.data.id);
-          return (
-            <div class={`lesson-task-group ${hasActive ? 'is-active-group' : ''}`}>
-              <div class="lesson-task-label" style={`color:${domain.color}`}>
-                <span class="lesson-task-ref">{ref}</span>
-                {taskInfo && <span class="lesson-task-name-small">{taskInfo.title}</span>}
-              </div>
-              {lessons.map(l => {
-                const slug = l.slug.split('/').pop();
-                const isActive = l.data.id === lesson.data.id;
-                return (
-                  <a
-                    href={`/learn/${domain.id}/${slug}`}
-                    class={`lesson-nav-link ${isActive ? 'active' : ''}`}
-                    data-lesson-id={l.data.id}
-                  >
-                    <span class="lesson-nav-dot"
-                      style={isActive ? `background:${domain.color}` : ''}></span>
-                    <span class="lesson-nav-title">{l.data.title}</span>
-                    {l.data.tag?.includes('⚡') && <span style="font-size:10px;flex-shrink:0">⚡</span>}
-                  </a>
-                );
-              })}
-            </div>
-          );
-        })}
-      </nav>
-
-    </div>
-  </aside>
-
-  <!-- ── LESSON CONTENT ── -->
-  <div class="lesson-content-wrap">
-
-    <!-- Lesson header breadcrumb -->
-    <div class="lesson-breadcrumb">
-      <a href="/learn" class="lesson-bc-link">Learn</a>
-      <span class="lesson-bc-sep">›</span>
-      <a href={`/learn/${domain.id}`} class="lesson-bc-link" style={`color:${domain.color}`}>
-        {domain.code}
-      </a>
-      {lesson.data.taskRef && (
-        <>
-          <span class="lesson-bc-sep">›</span>
-          <span class="lesson-bc-ref" style={`color:${domain.color}88`}>{lesson.data.taskRef}</span>
-        </>
-      )}
-    </div>
-
-    <!-- Lesson meta bar -->
-    <div class="lesson-meta-bar">
-      <div class="lesson-meta-tags">
-        <span class="lesson-tag" style={`background:${domain.color}20;color:${domain.color};border:1px solid ${domain.color}33`}>
-          {lesson.data.tag}
-        </span>
-        <span class="lesson-tag-muted">{lesson.data.duration}</span>
-        <span class="lesson-tag-muted">+{lesson.data.xp} XP</span>
-      </div>
-    </div>
-
-    <h1 class="lesson-title">{lesson.data.title}</h1>
+  <div class="lesson-chips">
+    <span class="lesson-chip" style={`background:${domain.color}18;color:${domain.color};border:1px solid ${domain.color}33`}>
+      {lesson.data.tag}
+    </span>
+    <span class="lesson-chip-muted">{lesson.data.duration}</span>
+    <span class="lesson-chip-muted">+{lesson.data.xp} XP</span>
+    {prevLesson && (
+      <a href={`/learn/${domain.id}/${prevLesson.slug.split('/').pop()}`} class="lesson-navpill">← Prev</a>
+    )}
+    {nextLesson && (
+      <a href={`/learn/${domain.id}/${nextLesson.slug.split('/').pop()}`}
+        class="lesson-navpill lesson-navpill-next"
+        style={`color:${domain.color}`}>Next →</a>
+    )}
+  </div>
 
     <div
       id="lesson-meta-data"
@@ -296,178 +229,73 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
       </a>
     </div>
 
-  </div>
-
 </div>
 
 </BaseLayout>
 
 <style>
-/* ── LESSON LAYOUT ─────────────────────────────── */
-.lesson-layout {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  min-height: 100vh;
-}
-@media (max-width: 900px) {
-  .lesson-layout { grid-template-columns: 1fr; }
-  .lesson-sidebar { display: none; }
-}
+/* ── LESSON PAGE LAYOUT ────────────────────────── */
+.lesson-page { max-width: 820px; margin: 0 auto; padding: 24px 32px 80px; }
 
-/* ── LESSON SIDEBAR ────────────────────────────── */
-.lesson-sidebar {
-  border-right: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  background: var(--deep);
-  scrollbar-width: thin;
-}
-.lesson-sidebar-inner { padding: 0 0 40px; }
-
-.lesson-domain-header {
-  padding: 16px 14px 14px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
-}
-.lesson-back-top {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-  text-decoration: none;
-  display: block;
-  margin-bottom: 8px;
-  letter-spacing: 1px;
-}
-.lesson-back-top:hover { color: var(--electric); }
-.lesson-domain-link {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-decoration: none;
-}
-.lesson-domain-code {
-  font-family: 'Bebas Neue', Impact, sans-serif;
-  font-size: 22px;
-  letter-spacing: 2px;
-  line-height: 1;
-}
-.lesson-domain-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--subtle);
-  line-height: 1.4;
-}
-
-.lesson-nav-tree { padding: 4px 6px; }
-.lesson-task-group { margin-bottom: 2px; }
-.lesson-task-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 8px 8px 3px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.lesson-task-ref { opacity: 0.7; }
-.lesson-task-name-small {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--subtle);
-  opacity: 1;
-  line-height: 1.4;
-}
-.lesson-nav-link {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 6px 8px 6px 14px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.45;
-  transition: all 0.15s;
-}
-.lesson-nav-link:hover { background: var(--surface); color: var(--subtle); }
-.lesson-nav-link.active {
-  background: var(--surface);
-  color: var(--white);
-  font-weight: 600;
-}
-.lesson-nav-link.completed .lesson-nav-dot { background: var(--green) !important; }
-.lesson-nav-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border);
-  flex-shrink: 0;
-  margin-top: 4px;
-  transition: background 0.2s;
-}
-.lesson-nav-title { flex: 1; }
-
-/* ── LESSON CONTENT ────────────────────────────── */
-.lesson-content-wrap {
-  padding: 24px 40px 60px;
-  max-width: 800px;
-}
-@media (max-width: 1100px) {
-  .lesson-content-wrap { padding: 20px 24px 48px; }
-}
-
-.lesson-breadcrumb {
+.lesson-topnav {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
-.lesson-bc-link {
+.lesson-topnav-link {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
+  font-size: 12px;
+  color: var(--subtle);
   text-decoration: none;
-  letter-spacing: 1px;
 }
-.lesson-bc-link:hover { color: var(--text); }
-.lesson-bc-sep { color: var(--muted); font-size: 12px; }
-.lesson-bc-ref {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
+.lesson-topnav-link:hover { color: var(--text); }
+.lesson-topnav-sep { color: var(--border); font-size: 14px; }
+.lesson-topnav-ref { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+.lesson-heading {
+  font-family: 'Bebas Neue', Impact, sans-serif;
+  font-size: clamp(28px, 4vw, 48px);
+  color: white;
+  letter-spacing: 2px;
+  line-height: 1.1;
+  margin-bottom: 16px;
 }
 
-.lesson-meta-bar { display: flex; align-items: center; margin-bottom: 12px; }
-.lesson-meta-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-.lesson-tag {
+.lesson-chips {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.lesson-chip {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 3px;
+  padding: 3px 10px;
+  border-radius: 4px;
   letter-spacing: 0.5px;
 }
-.lesson-tag-muted {
+.lesson-chip-muted {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
+  font-size: 11px;
+  color: var(--subtle);
 }
-
-.lesson-title {
-  font-family: 'Bebas Neue', Impact, sans-serif;
-  font-size: clamp(24px, 3vw, 40px);
-  color: var(--white);
-  letter-spacing: 1px;
-  line-height: 1.1;
-  margin-bottom: 20px;
+.lesson-navpill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--subtle);
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: all 0.15s;
+  margin-left: auto;
 }
+.lesson-navpill:hover { border-color: var(--subtle); color: var(--text); }
+.lesson-navpill-next { margin-left: 0; }
 
 /* ── STEP TABS ─────────────────────────────────── */
 .lesson-step-tabs {
@@ -710,13 +538,6 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
   }
 
   // Mark completed lessons in sidebar
-  completed.forEach((id: string) => {
-    document.querySelectorAll(`.lesson-nav-link[data-lesson-id="${id}"]`).forEach(el => {
-      el.classList.add('completed');
-      const dot = el.querySelector('.lesson-nav-dot') as HTMLElement;
-      if (dot) dot.style.background = '#00f593';
-    });
-  });
 
   (window as any).switchTab = switchTab;
   (window as any).completeLesson = completeLesson;
