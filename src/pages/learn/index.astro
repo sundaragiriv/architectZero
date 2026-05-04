@@ -10,7 +10,7 @@ import { DOMAINS } from '../../lib/domains';
   <div class="px-4 py-4">
 
     <p class="text-xs text-az-muted font-mono mb-4">
-      7 domains · 108 lessons · start with D0 if new to AI
+      7 domains · 114 lessons · start with D0 if new to AI
     </p>
 
     {DOMAINS.map(domain => (
@@ -50,7 +50,7 @@ import { DOMAINS } from '../../lib/domains';
 
 <script>
   const domainLessonCounts: Record<string, number> = {
-    d0:6, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12
+    d0:12, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12
   };
   const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
 

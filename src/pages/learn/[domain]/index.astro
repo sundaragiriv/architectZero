@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CourseRail from '../../../components/CourseRail.astro';
 import { getCollection } from 'astro:content';
 import { DOMAINS } from '../../../lib/domains';
 
@@ -16,26 +17,6 @@ const domainLessons = allLessons
   .filter(l => l.data.domain === domain.id)
   .sort((a, b) => a.data.order - b.data.order);
 
-// Group lessons by taskRef
-const taskGroups: Record<string, typeof domainLessons> = {};
-const noTaskLessons: typeof domainLessons = [];
-
-for (const lesson of domainLessons) {
-  const ref = lesson.data.taskRef || '__none__';
-  if (ref === '__none__') {
-    noTaskLessons.push(lesson);
-  } else {
-    if (!taskGroups[ref]) taskGroups[ref] = [];
-    taskGroups[ref].push(lesson);
-  }
-}
-
-// Get task statement metadata from domain definition
-const taskMap = Object.fromEntries(
-  (domain.taskStatements || []).map(t => [t.ref, t])
-);
-
-// Find prev/next domains for navigation
 const domainIdx = DOMAINS.findIndex(d => d.id === domain.id);
 const prevDomain = domainIdx > 0 ? DOMAINS[domainIdx - 1] : null;
 const nextDomain = domainIdx < DOMAINS.length - 1 ? DOMAINS[domainIdx + 1] : null;
@@ -46,139 +27,55 @@ const firstLessonSlug = firstLesson?.slug.split('/').pop();
 
 <BaseLayout title={`${domain.code} — ${domain.title} | Architect Zero`}>
 
-<div class="domain-page">
+<div class="domain-landing">
 
-    <!-- Domain hero -->
-    <div class="domain-hero" style={`border-left:4px solid ${domain.color}`}>
-      <div class="domain-hero-eyebrow">
-        <span style={`color:${domain.color}`}>{domain.code}</span>
-        {domain.examWeight && (
-          <span class="domain-hero-weight" style={`background:${domain.color}20;color:${domain.color};border:1px solid ${domain.color}33`}>
-            {domain.examWeight} of exam
-          </span>
-        )}
-        <span class="domain-hero-tag">{domain.tag}</span>
+  <a href="/learn" class="domain-back">← All domains</a>
+
+  <div class="domain-hero" style={`border-left:4px solid ${domain.color}`}>
+    <div class="domain-hero-eyebrow">
+      <span class="domain-hero-code" style={`color:${domain.color}`}>{domain.code}</span>
+      {domain.examWeight && (
+        <span class="domain-hero-weight" style={`background:${domain.color}20;color:${domain.color};border:1px solid ${domain.color}33`}>
+          {domain.examWeight} of exam
+        </span>
+      )}
+      <span class="domain-hero-tag">{domain.tag}</span>
+    </div>
+    <h1 class="domain-hero-title">{domain.title}</h1>
+    <p class="domain-hero-desc">{domain.description}</p>
+
+    <div class="domain-hero-stats">
+      <div class="domain-stat">
+        <div class="domain-stat-num" style={`color:${domain.color}`}>{domain.lessonCount}</div>
+        <div class="domain-stat-label">Lessons</div>
       </div>
-      <h1 class="domain-hero-title">{domain.title}</h1>
-      <p class="domain-hero-desc">{domain.description}</p>
-
-      <div class="domain-hero-stats">
-        <div class="domain-stat">
-          <div class="domain-stat-num" style={`color:${domain.color}`}>{domain.lessonCount}</div>
-          <div class="domain-stat-label">Lessons</div>
-        </div>
-        <div class="domain-stat">
-          <div class="domain-stat-num" style={`color:${domain.color}`}>{domain.taskCount || '—'}</div>
-          <div class="domain-stat-label">Task Statements</div>
-        </div>
-        <div class="domain-stat">
-          <div class="domain-stat-num domain-pct-display" style={`color:${domain.color}`}>0%</div>
-          <div class="domain-stat-label">Complete</div>
-        </div>
+      <div class="domain-stat">
+        <div class="domain-stat-num" style={`color:${domain.color}`}>{domain.taskCount || '—'}</div>
+        <div class="domain-stat-label">Task Statements</div>
       </div>
-
-      {domainLessons.length > 0 && firstLesson && firstLessonSlug && firstLessonSlug !== 'undefined' ? (
-        <a href={`/learn/${domain.id}/${firstLessonSlug}`} class="domain-start-btn"
-          style={`background:${domain.color};color:#04040a`}>
-          Start →
-        </a>
-      ) : domainLessons.length === 0 ? (
-        <div class="domain-start-btn"
-          style="background:var(--border);color:var(--muted);cursor:not-allowed;opacity:0.5;display:inline-block;padding:10px 28px;border-radius:8px;font-weight:800;font-size:14px;text-align:center">
-          Coming Soon
-        </div>
-      ) : null}
+      <div class="domain-stat">
+        <div class="domain-stat-num domain-pct-display" style={`color:${domain.color}`}>0%</div>
+        <div class="domain-stat-label">Complete</div>
+      </div>
     </div>
 
-    <!-- Task statement cards -->
-    {Object.keys(taskGroups).length > 0 ? (
-      <div class="task-cards">
-        {Object.entries(taskGroups).sort().map(([ref, lessons]) => {
-          const taskInfo = taskMap[ref];
-          return (
-            <div class="task-card" style={`border-left:3px solid ${domain.color}66`}>
-              <div class="task-card-header">
-                <span class="task-card-ref" style={`color:${domain.color}`}>{ref}</span>
-                <span class="task-card-count">{lessons.length} lessons</span>
-              </div>
-              {taskInfo && (
-                <>
-                  <div class="task-card-title">{taskInfo.title}</div>
-                  <div class="task-card-desc">{taskInfo.description}</div>
-                </>
-              )}
-              <div class="task-card-lessons">
-                {lessons.map((lesson, i) => {
-                  const slug = lesson.slug.split('/').pop();
-                  return (
-                    <a href={`/learn/${domain.id}/${slug}`} class="task-lesson-item"
-                      data-lesson-id={lesson.data.id}>
-                      <div class="task-lesson-num" style={`background:${domain.color}20;color:${domain.color}`}>
-                        {i + 1}
-                      </div>
-                      <div class="task-lesson-info">
-                        <div class="task-lesson-title">{lesson.data.title}</div>
-                        <div class="task-lesson-meta">
-                          <span style={`background:${domain.color}15;color:${domain.color};border:1px solid ${domain.color}30`}
-                            class="task-lesson-tag">
-                            {lesson.data.tag}
-                          </span>
-                          <span class="task-lesson-xp">+{lesson.data.xp} XP</span>
-                          <span class="task-lesson-dur">{lesson.data.duration}</span>
-                        </div>
-                      </div>
-                      <div class="task-lesson-status" data-lesson-id={lesson.data.id}>
-                        <span class="task-lesson-arrow" style={`color:${domain.color}`}>→</span>
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      /* No-task domains (D0) — simple flat list */
-      <div class="task-cards">
-        <div class="task-card" style={`border-left:3px solid ${domain.color}66`}>
-          <div class="task-card-header">
-            <span class="task-card-ref" style={`color:${domain.color}`}>Foundations</span>
-            <span class="task-card-count">{noTaskLessons.length} lessons</span>
-          </div>
-          <div class="task-card-lessons">
-            {noTaskLessons.map((lesson, i) => {
-              const slug = lesson.slug.split('/').pop();
-              return (
-                <a href={`/learn/${domain.id}/${slug}`} class="task-lesson-item"
-                  data-lesson-id={lesson.data.id}>
-                  <div class="task-lesson-num" style={`background:${domain.color}20;color:${domain.color}`}>
-                    {i + 1}
-                  </div>
-                  <div class="task-lesson-info">
-                    <div class="task-lesson-title">{lesson.data.title}</div>
-                    <div class="task-lesson-meta">
-                      <span style={`background:${domain.color}15;color:${domain.color};border:1px solid ${domain.color}30`}
-                        class="task-lesson-tag">{lesson.data.tag}</span>
-                      <span class="task-lesson-xp">+{lesson.data.xp} XP</span>
-                    </div>
-                  </div>
-                  <span class="task-lesson-arrow" style={`color:${domain.color}`}>→</span>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    )}
-
-  <!-- Domain prev/next navigation -->
-  <div class="domain-nav-row">
-    {prevDomain && (
-      <a href={`/learn/${prevDomain.id}`} class="domain-nav-btn">
-        ← {prevDomain.code}
+    {firstLesson && firstLessonSlug && (
+      <a id="domain-resume-cta" href={`/learn/${domain.id}/${firstLessonSlug}`}
+        class="domain-resume-btn"
+        style={`background:${domain.color};color:#04040a`}>
+        Start →
       </a>
     )}
+  </div>
+
+  <div class="domain-toc-label">Course content</div>
+
+  <CourseRail domain={domain} lessons={domainLessons} />
+
+  <div class="domain-nav-row">
+    {prevDomain ? (
+      <a href={`/learn/${prevDomain.id}`} class="domain-nav-btn">← {prevDomain.code}</a>
+    ) : <span/>}
     {nextDomain && (
       <a href={`/learn/${nextDomain.id}`} class="domain-nav-btn" style="margin-left:auto">
         {nextDomain.code} →
@@ -191,76 +88,72 @@ const firstLessonSlug = firstLesson?.slug.split('/').pop();
 </BaseLayout>
 
 <style>
-/* ── DOMAIN PAGE LAYOUT ────────────────────────── */
-.domain-page { max-width: 960px; margin: 0 auto; padding: 24px 32px 80px; }
+.domain-landing { max-width: 760px; margin: 0 auto; padding: 24px 32px 80px; }
 
-.domain-nav-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 40px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-}
-.domain-nav-btn {
+.domain-back {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--muted);
   text-decoration: none;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  transition: all 0.15s;
+  display: inline-block;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
 }
-.domain-nav-btn:hover { color: var(--electric); border-color: var(--electric); }
+.domain-back:hover { color: var(--text); }
 
-/* ── DOMAIN HERO ───────────────────────────────── */
 .domain-hero {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 28px 32px;
-  margin-bottom: 32px;
+  border-radius: 14px;
+  padding: 32px;
+  margin-bottom: 28px;
 }
 .domain-hero-eyebrow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.domain-hero-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
 }
 .domain-hero-weight {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 4px;
   letter-spacing: 1px;
 }
 .domain-hero-tag {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   letter-spacing: 1px;
 }
 .domain-hero-title {
   font-family: 'Bebas Neue', Impact, sans-serif;
-  font-size: clamp(28px, 3vw, 44px);
+  font-size: clamp(32px, 4vw, 48px);
   color: var(--white);
   letter-spacing: 2px;
-  margin-bottom: 10px;
+  line-height: 1.05;
+  margin-bottom: 14px;
 }
 .domain-hero-desc {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--subtle);
-  line-height: 1.8;
-  margin-bottom: 20px;
-  max-width: 640px;
+  line-height: 1.75;
+  margin-bottom: 24px;
 }
 .domain-hero-stats {
   display: flex;
-  gap: 24px;
-  margin-bottom: 20px;
+  gap: 32px;
+  margin-bottom: 24px;
 }
-.domain-stat { text-align: center; }
 .domain-stat-num {
   font-family: 'Bebas Neue', Impact, sans-serif;
   font-size: 36px;
@@ -275,150 +168,76 @@ const firstLessonSlug = firstLesson?.slug.split('/').pop();
   letter-spacing: 2px;
   text-transform: uppercase;
 }
-.domain-start-btn {
+.domain-resume-btn {
   display: inline-block;
-  padding: 10px 28px;
-  border-radius: 8px;
+  padding: 14px 36px;
+  border-radius: 10px;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 15px;
   text-decoration: none;
   letter-spacing: 0.5px;
   transition: all 0.15s;
 }
-.domain-start-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.domain-resume-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
-/* ── TASK CARDS ────────────────────────────────── */
-.task-cards { display: flex; flex-direction: column; gap: 16px; }
-
-.task-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
+.domain-toc-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
 }
-.task-card-header {
+
+.domain-nav-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px 10px;
-  border-bottom: 1px solid var(--border);
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
 }
-.task-card-ref {
+.domain-nav-btn {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-.task-card-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
   color: var(--muted);
-}
-.task-card-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--white);
-  padding: 10px 20px 4px;
-  line-height: 1.4;
-}
-.task-card-desc {
-  font-size: 12px;
-  color: var(--muted);
-  padding: 0 20px 12px;
-  line-height: 1.6;
-  border-bottom: 1px solid var(--border);
-}
-
-/* ── LESSON ITEMS INSIDE TASK CARD ─────────────── */
-.task-card-lessons { display: flex; flex-direction: column; }
-
-.task-lesson-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 20px;
   text-decoration: none;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  letter-spacing: 1px;
+  transition: all 0.15s;
 }
-.task-lesson-item:last-child { border-bottom: none; }
-.task-lesson-item:hover { background: var(--card); }
-.task-lesson-item.completed { opacity: 0.7; }
-.task-lesson-item.completed .task-lesson-arrow::before { content: '✓ '; color: var(--green); }
+.domain-nav-btn:hover { color: var(--electric); border-color: var(--electric); }
 
-.task-lesson-num {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 900;
-  flex-shrink: 0;
+@media (max-width: 600px) {
+  .domain-landing { padding: 16px 16px 100px; }
+  .domain-hero { padding: 22px; }
+  .domain-hero-stats { gap: 18px; }
+  .domain-stat-num { font-size: 28px; }
 }
-.task-lesson-info { flex: 1; }
-.task-lesson-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
-  line-height: 1.4;
-}
-.task-lesson-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.task-lesson-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 3px;
-  letter-spacing: 0.5px;
-}
-.task-lesson-xp {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-}
-.task-lesson-dur {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-}
-.task-lesson-status { flex-shrink: 0; }
-.task-lesson-arrow {
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-.task-lesson-item:hover .task-lesson-arrow { opacity: 1; }
 </style>
 
 <script>
-  // Mark completed lessons
+  // Resume button: jump to first incomplete lesson; relabel based on state
   const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
+  const cta = document.getElementById('domain-resume-cta') as HTMLAnchorElement | null;
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.course-lesson'));
 
-  // Task card items
-  document.querySelectorAll('.task-lesson-item').forEach(el => {
-    const id = (el as HTMLElement).dataset.lessonId || '';
-    if (completed.includes(id)) {
-      el.classList.add('completed');
+  if (cta) {
+    const next = links.find(a => !completed.includes(a.dataset.lessonId || ''));
+    if (next) {
+      cta.href = next.href;
+      cta.textContent = completed.length === 0 ? 'Start →' : 'Resume →';
+    } else if (links.length) {
+      cta.href = links[0].href;
+      cta.textContent = 'Review →';
     }
-  });
+  }
 
-  // Progress percentage
-  const domainId = window.location.pathname.split('/')[2];
-  const domainLessonCounts: Record<string, number> = {
-    d0:12, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12
-  };
-  const total = domainLessonCounts[domainId] || 1;
-  const done = completed.filter(c => c.startsWith(domainId)).length;
-  const pct = Math.round((done / total) * 100);
+  // Domain progress %
+  const total = links.length;
+  const done = links.filter(a => completed.includes(a.dataset.lessonId || '')).length;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
   const pctEl = document.querySelector('.domain-pct-display');
   if (pctEl) pctEl.textContent = pct + '%';
 </script>
