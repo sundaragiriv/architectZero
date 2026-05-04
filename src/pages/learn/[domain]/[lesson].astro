@@ -201,11 +201,6 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
         </div>
       </div>
 
-      <a href={`/teachback?lesson=${lesson.data.id}`}
-        class="lesson-teachback-btn">
-        🎤 Teach this back — prove you know it
-      </a>
-
       <!-- Prev/Next navigation -->
       <div class="lesson-prevnext">
         {prevLesson && (
@@ -441,22 +436,6 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
 }
 .lesson-advance-btn:hover { filter: brightness(1.1); }
 .lesson-done-msg { text-align: center; padding: 13px; font-weight: 700; margin-bottom: 10px; }
-.lesson-teachback-btn {
-  display: block;
-  width: 100%;
-  padding: 13px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  border: 2px solid rgba(0,229,255,0.4);
-  background: rgba(0,229,255,0.07);
-  color: #00e5ff;
-  text-align: center;
-  text-decoration: none;
-  margin-bottom: 24px;
-  transition: all 0.15s;
-}
-.lesson-teachback-btn:hover { border-color: #00e5ff; background: rgba(0,229,255,0.12); }
 
 /* Prev/next */
 .lesson-prevnext {

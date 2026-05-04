@@ -414,7 +414,7 @@ const firstLessonSlug = firstLesson?.slug.split('/').pop();
   // Progress percentage
   const domainId = window.location.pathname.split('/')[2];
   const domainLessonCounts: Record<string, number> = {
-    d0:6, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12
+    d0:12, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12
   };
   const total = domainLessonCounts[domainId] || 1;
   const done = completed.filter(c => c.startsWith(domainId)).length;
