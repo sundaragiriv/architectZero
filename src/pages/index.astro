@@ -181,7 +181,7 @@ const d0 = DOMAINS.find(d => d.id === 'd0')!;
 </style>
 
 <script>
-const LESSON_COUNTS: Record<string,number> = { d1:21, d2:15, d3:18, d4:18, d5:18, d6:12 };
+const LESSON_COUNTS: Record<string,number> = { d0:12, d1:21, d2:15, d3:18, d4:18, d5:18, d6:12 };
 const xp = Number(localStorage.getItem('az_xp') || 0);
 const completed: string[] = JSON.parse(localStorage.getItem('az_completed') || '[]');
 const mastered: string[] = JSON.parse(localStorage.getItem('az_mastered') || '[]');
@@ -190,7 +190,7 @@ const quizHistory: Record<string,boolean> = JSON.parse(localStorage.getItem('az_
 (document.getElementById('dash-xp') as HTMLElement).textContent = xp.toLocaleString();
 
 const totalLessons = Object.values(LESSON_COUNTS).reduce((a,b) => a+b, 0);
-const doneLessons = completed.filter(id => !id.startsWith('d0')).length;
+const doneLessons = completed.filter(id => /^d[0-6]-/.test(id)).length;
 (document.getElementById('dash-lessons') as HTMLElement).textContent = `${doneLessons}/${totalLessons}`;
 (document.getElementById('dash-mastered') as HTMLElement).textContent = String(mastered.length);
 

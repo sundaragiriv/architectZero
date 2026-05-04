@@ -16,9 +16,9 @@
   --surface:  #0d0d1c;
   --card:     #111125;
   --border:   #1a1a30;
-  --muted:    #4a4a70;
-  --subtle:   #8888b8;
-  --text:     #e8ecf8;
+  --muted:    #5a5a85;
+  --subtle:   #9090c0;
+  --text:     #eef0fa;
   --white:    #ffffff;
   --electric: #00e5ff;
   --signal:   #ff3d71;
@@ -50,6 +50,7 @@ html {
 
 body {
   background: var(--black);
+  font-size: 16px;
   min-height: 100vh;
   overflow-x: hidden;
   margin: 0;

@@ -35,7 +35,7 @@ export const DOMAINS: Domain[] = [
     tag: 'START HERE',
     examWeight: null,
     taskCount: 0,
-    lessonCount: 6,
+    lessonCount: 12,
     description: 'Zero assumed knowledge. Build genuine intuition about AI, LLMs, Claude, and the API before touching any exam content. Essential for teaching this content to others.',
     taskStatements: [],
   },
