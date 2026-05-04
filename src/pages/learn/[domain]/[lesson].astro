@@ -78,7 +78,8 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
       style="display:none"
     ></div>
 
-    <div class="lesson-step-tabs" style={`border-bottom:1px solid ${domain.color}22`}>
+    <div class="lesson-step-tabs" data-accent={domain.color}
+      style={`border-bottom:1px solid ${domain.color}22`}>
       {[
         { key: 'analogy',   label: '💡 Analogy'   },
         { key: 'concept',   label: '📖 Concept'   },
@@ -87,6 +88,7 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
         <button
           class="lesson-step-btn"
           id={`tab-${key}`}
+          data-tab-key={key}
           onclick={`switchTab('${key}')`}
           style={i === 0
             ? `background:${domain.color};border-color:${domain.color};color:#04040a`
@@ -468,6 +470,22 @@ const nextLesson = currentIdx < domainLessons.length - 1 ? domainLessons[current
       const panel = document.getElementById(`panel-${t}`);
       if (panel) panel.classList.toggle('hidden', t !== tab);
     });
+    const tabsEl = document.querySelector('.lesson-step-tabs') as HTMLElement | null;
+    if (tabsEl) {
+      const accent = tabsEl.dataset.accent || '#00e5ff';
+      tabsEl.querySelectorAll<HTMLButtonElement>('.lesson-step-btn').forEach(btn => {
+        const isActive = btn.dataset.tabKey === tab;
+        if (isActive) {
+          btn.style.background = accent;
+          btn.style.borderColor = accent;
+          btn.style.color = '#04040a';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.borderColor = accent + '44';
+          btn.style.color = '#9898c8';
+        }
+      });
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
